@@ -1,65 +1,151 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+
+// Katakana + alphanumeric mix for the matrix rain characters
+const CHARS = "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+// Terminal lines — loop continuously with a hold on the last line before resetting
+const LINES = [
+  "> initializing...",
+  "> loading rodmk.com",
+  "> coming soon",
+];
 
 export default function Home() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [typed, setTyped] = useState("");
+  const [showCursor, setShowCursor] = useState(true);
+  const [visibleLines, setVisibleLines] = useState<string[]>([]);
+
+  // Matrix rain
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    const fontSize = 14;
+    let cols = Math.floor(canvas.width / fontSize);
+    const drops: number[] = Array(cols).fill(1);
+
+    const draw = () => {
+      cols = Math.floor(canvas.width / fontSize);
+      while (drops.length < cols) drops.push(1);
+
+      // Low-opacity black fill creates the fading trail effect
+      ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = "#00ff41";
+      ctx.font = `${fontSize}px monospace`;
+
+      for (let i = 0; i < drops.length; i++) {
+        const char = CHARS[Math.floor(Math.random() * CHARS.length)];
+        // Fade brightness linearly from bright green at top to black at bottom
+        const progress = (drops[i] * fontSize) / canvas.height;
+        const brightness = Math.round(255 * Math.max(0, 1 - progress));
+        ctx.fillStyle = `rgb(0, ${brightness}, 0)`;
+        ctx.fillText(char, i * fontSize, drops[i] * fontSize);
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+        drops[i]++;
+      }
+    };
+
+    const interval = setInterval(draw, 50);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("resize", resize);
+    };
+  }, []);
+
+  // Typewriter
+  useEffect(() => {
+    let lineIndex = 0;
+    let charIndex = 0;
+    let current = "";
+    let cancelled = false;
+
+    const type = () => {
+      if (cancelled) return;
+
+      const line = LINES[lineIndex];
+      if (charIndex < line.length) {
+        current += line[charIndex];
+        setTyped(current);
+        charIndex++;
+        setTimeout(type, 70);
+      } else if (lineIndex === LINES.length - 1) {
+        // Hold the last line with cursor visible before resetting
+        setTimeout(() => {
+          if (cancelled) return;
+          setVisibleLines([]);
+          setTyped("");
+          current = "";
+          charIndex = 0;
+          lineIndex = 0;
+          setTimeout(type, 400);
+        }, 3000);
+      } else {
+        // Hold cursor at end of line before moving on
+        setTimeout(() => {
+          if (cancelled) return;
+          setVisibleLines((prev) => [...prev, current]);
+          setTyped("");
+          current = "";
+          charIndex = 0;
+          lineIndex++;
+          setTimeout(type, 300);
+        }, 700);
+      }
+    };
+
+    setTimeout(type, 800);
+    return () => { cancelled = true; };
+  }, []);
+
+  // Blinking cursor
+  useEffect(() => {
+    const interval = setInterval(() => setShowCursor((v) => !v), 530);
+    return () => clearInterval(interval);
+  }, []);
+
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="relative w-full h-screen overflow-hidden bg-black">
+      <canvas ref={canvasRef} className="absolute inset-0" />
+      {/* CRT scanline effect */}
+      <div className="absolute inset-0 pointer-events-none" style={{ background: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.4) 2px, rgba(0,0,0,0.4) 4px)" }} />
+      <div className="relative z-10 flex items-center justify-center h-full">
+        {/* Monaco/Menlo for Mac, Consolas for Windows — no web font dependency. Ligatures off to prevent ... → … substitution. Phosphor glow via text-shadow. */}
+        <div className="text-sm sm:text-base text-green-400 p-8 max-w-lg w-full bg-black/70 backdrop-blur-sm rounded" style={{ fontFamily: "Monaco, Menlo, Consolas, 'Courier New', monospace", fontVariantLigatures: "none", textShadow: "0 0 4px rgba(0, 255, 65, 0.4)" }}>
+          <div className="mb-6 text-green-500 opacity-60 text-xs tracking-widest uppercase">
+            rodmk.com
+          </div>
+          <div className="mb-1">
+            {visibleLines.map((line, i) => (
+              <div key={i} className="mb-1 opacity-70">{line}</div>
+            ))}
+            <div className="mb-1">
+              {typed}<span className={typed && showCursor ? "opacity-100" : "opacity-0"}>█</span>
+            </div>
+          </div>
+          <div className="mt-6 text-xs text-green-700 hover:text-green-400 transition-colors">
+            <a href="https://github.com/rodmk" target="_blank" rel="noopener noreferrer">
+              ~/github.com/rodmk
+            </a>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </div>
     </div>
   );
 }
