@@ -37,64 +37,59 @@ export default function Home() {
     const brightHeadChance = 0.2;
     const brightHeadColor = "rgb(180, 255, 180)";
 
+    type Column = {
+      drop: number;
+      speed: number;
+      hasBrightHead: boolean;
+      char: string;
+      lastRow: number;
+    };
+
+    const makeColumn = (rows: number): Column => ({
+      drop: Math.floor(Math.random() * rows), // stagger start positions so rain looks mid-flow
+      speed: speedMin + Math.random() * (speedMax - speedMin), // vary speed per column so drops feel independent
+      hasBrightHead: Math.random() < brightHeadChance, // some columns lead with a bright character for visual variety
+      char: CHARS[Math.floor(Math.random() * CHARS.length)], // initial char before first drop
+      lastRow: -1, // tracks row for sticky chars
+    });
+
     let cols = Math.floor(canvas.width / fontSize);
     const rows = Math.floor(canvas.height / fontSize);
-    const drops: number[] = Array.from(
-      { length: cols },
-      () => Math.floor(Math.random() * rows) // stagger start positions so rain looks mid-flow
+    const columns: Column[] = Array.from({ length: cols }, () =>
+      makeColumn(rows)
     );
-    const speeds: number[] = Array.from(
-      { length: cols },
-      () => speedMin + Math.random() * (speedMax - speedMin) // vary speed per column so drops feel independent
-    );
-    const hasWhiteHead: boolean[] = Array.from(
-      { length: cols },
-      () => Math.random() < brightHeadChance // some columns lead with a bright character for visual variety
-    );
-    const colChars: string[] = Array.from(
-      { length: cols },
-      () => CHARS[Math.floor(Math.random() * CHARS.length)] // initial char per column before first drop
-    );
-    const lastRow: number[] = Array.from({ length: cols }, () => -1); // tracks row for sticky chars
 
     const draw = () => {
       cols = Math.floor(canvas.width / fontSize);
-      while (drops.length < cols) drops.push(1);
-      while (speeds.length < cols)
-        speeds.push(speedMin + Math.random() * (speedMax - speedMin));
-      while (hasWhiteHead.length < cols)
-        hasWhiteHead.push(Math.random() < brightHeadChance);
-      while (colChars.length < cols)
-        colChars.push(CHARS[Math.floor(Math.random() * CHARS.length)]);
-      while (lastRow.length < cols) lastRow.push(-1);
+      while (columns.length < cols) columns.push(makeColumn(rows));
 
       ctx.fillStyle = `rgba(0, 0, 0, ${trailFadeAlpha})`;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       ctx.font = `${fontSize}px monospace`;
 
-      for (let i = 0; i < drops.length; i++) {
-        const currentRow = Math.floor(drops[i]);
-        if (currentRow !== lastRow[i]) {
-          colChars[i] = CHARS[Math.floor(Math.random() * CHARS.length)]; // new char each row so trail reads as distinct characters
-          lastRow[i] = currentRow;
+      for (let i = 0; i < columns.length; i++) {
+        const col = columns[i];
+        const currentRow = Math.floor(col.drop);
+        if (currentRow !== col.lastRow) {
+          col.char = CHARS[Math.floor(Math.random() * CHARS.length)]; // new char each row so trail reads as distinct characters
+          col.lastRow = currentRow;
         }
-        const char = colChars[i];
-        const progress = (drops[i] * fontSize) / canvas.height;
+        const progress = (col.drop * fontSize) / canvas.height;
         const brightness = Math.round(255 * Math.max(0, 1 - progress)); // characters dim as they fall
         const shimmer = shimmerMin + Math.random() * (shimmerMax - shimmerMin); // random flicker gives the trail texture
-        ctx.fillStyle = hasWhiteHead[i]
+        ctx.fillStyle = col.hasBrightHead
           ? brightHeadColor
           : `rgb(0, ${Math.round(brightness * shimmer)}, 0)`;
-        ctx.fillText(char, i * fontSize, Math.floor(drops[i]) * fontSize); // snap to grid to avoid sub-pixel smear
+        ctx.fillText(col.char, i * fontSize, Math.floor(col.drop) * fontSize); // snap to grid to avoid sub-pixel smear
         if (
-          drops[i] * fontSize > canvas.height &&
+          col.drop * fontSize > canvas.height &&
           Math.random() > dropResetThreshold
         ) {
-          drops[i] = 0;
-          hasWhiteHead[i] = Math.random() < brightHeadChance;
+          col.drop = 0;
+          col.hasBrightHead = Math.random() < brightHeadChance;
         }
-        drops[i] += speeds[i];
+        col.drop += col.speed;
       }
     };
 
