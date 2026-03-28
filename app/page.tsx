@@ -119,7 +119,7 @@ export default function Home() {
         current += chars[charIndex];
         setTyped(current);
         charIndex++;
-        setTimeout(type, 70);
+        setTimeout(type, 80 + Math.random() * 80);
       } else {
         const isLast = lineIndex === LINES.length - 1;
         // Hold cursor at end of line, then cycle to next (or reset if last)
