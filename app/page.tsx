@@ -29,8 +29,8 @@ export default function Home() {
 
     const fontSize = 16;
     const trailFadeAlpha = 0.05; // lower = longer trails
-    const speedMin = 0.3;
-    const speedMax = 1.5; // speedMin + 1.2
+    const speedMin = 0.2;
+    const speedMax = 0.8;
     const shimmerMin = 0.6;
     const shimmerMax = 1.0;
     const dropResetThreshold = 0.975; // higher = fewer simultaneous columns
@@ -50,6 +50,11 @@ export default function Home() {
       { length: cols },
       () => Math.random() < brightHeadChance
     );
+    const colChars: string[] = Array.from(
+      { length: cols },
+      () => CHARS[Math.floor(Math.random() * CHARS.length)]
+    );
+    const lastRow: number[] = Array.from({ length: cols }, () => -1);
 
     const draw = () => {
       cols = Math.floor(canvas.width / fontSize);
@@ -58,6 +63,9 @@ export default function Home() {
         speeds.push(speedMin + Math.random() * (speedMax - speedMin));
       while (hasWhiteHead.length < cols)
         hasWhiteHead.push(Math.random() < brightHeadChance);
+      while (colChars.length < cols)
+        colChars.push(CHARS[Math.floor(Math.random() * CHARS.length)]);
+      while (lastRow.length < cols) lastRow.push(-1);
 
       ctx.fillStyle = `rgba(0, 0, 0, ${trailFadeAlpha})`;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -65,14 +73,19 @@ export default function Home() {
       ctx.font = `${fontSize}px monospace`;
 
       for (let i = 0; i < drops.length; i++) {
-        const char = CHARS[Math.floor(Math.random() * CHARS.length)];
+        const currentRow = Math.floor(drops[i]);
+        if (currentRow !== lastRow[i]) {
+          colChars[i] = CHARS[Math.floor(Math.random() * CHARS.length)];
+          lastRow[i] = currentRow;
+        }
+        const char = colChars[i];
         const progress = (drops[i] * fontSize) / canvas.height;
         const brightness = Math.round(255 * Math.max(0, 1 - progress));
         const shimmer = shimmerMin + Math.random() * (shimmerMax - shimmerMin);
         ctx.fillStyle = hasWhiteHead[i]
           ? brightHeadColor
           : `rgb(0, ${Math.round(brightness * shimmer)}, 0)`;
-        ctx.fillText(char, i * fontSize, drops[i] * fontSize);
+        ctx.fillText(char, i * fontSize, Math.floor(drops[i]) * fontSize);
         if (
           drops[i] * fontSize > canvas.height &&
           Math.random() > dropResetThreshold
@@ -85,7 +98,7 @@ export default function Home() {
     };
 
     const tickMs = 120;
-    const prerollMs = 5000;
+    const prerollMs = 10000;
     for (let i = 0; i < Math.round(prerollMs / tickMs); i++) draw();
 
     const interval = setInterval(draw, tickMs);
