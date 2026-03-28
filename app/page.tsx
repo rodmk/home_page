@@ -229,7 +229,8 @@ export default function Home() {
           </a>
           <button
             onClick={() => {
-              window.location.href = `mailto:rod@${window.location.hostname.replace(/^www\./, "")}`;
+              const d = [114,111,100,109,107,46,99,111,109].map(c => String.fromCharCode(c)).join("");
+              window.location.href = `mailto:rod@${d}`;
             }}
             className="transition-colors duration-300 p-2"
             onMouseEnter={(e) => (e.currentTarget.style.color = `hsl(${hue}, 100%, 65%)`)}
