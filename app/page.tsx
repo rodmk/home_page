@@ -229,7 +229,7 @@ export default function Home() {
           </a>
           <button
             onClick={() => {
-              window.location.href = `mailto:rod@${window.location.hostname}`;
+              window.location.href = `mailto:rod@${window.location.hostname.replace(/^www\./, "")}`;
             }}
             className="transition-colors duration-300 p-2"
             onMouseEnter={(e) => (e.currentTarget.style.color = `hsl(${hue}, 100%, 65%)`)}
