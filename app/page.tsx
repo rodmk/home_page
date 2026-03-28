@@ -8,8 +8,12 @@ const CHARS =
 
 const LINES = ["hello, world 👋 "];
 
+// Rainbow hues cycled by triple-clicking the prompt
+const RAIN_HUES = [120, 200, 270, 0, 30, 60]; // green, blue, purple, red, orange, yellow
+
 export default function Home() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const colorIndexRef = useRef(0);
   const [typed, setTyped] = useState("");
   const [showCursor, setShowCursor] = useState(true);
 
@@ -35,7 +39,7 @@ export default function Home() {
     const shimmerMax = 1.0;
     const dropResetThreshold = 0.975; // higher = fewer simultaneous columns
     const brightHeadChance = 0.2;
-    const brightHeadColor = "rgb(180, 255, 180)";
+    const brightHeadLightness = 85; // lightness % for bright head characters
 
     type Column = {
       drop: number;
@@ -75,12 +79,13 @@ export default function Home() {
           col.char = CHARS[Math.floor(Math.random() * CHARS.length)]; // new char each row so trail reads as distinct characters
           col.lastRow = currentRow;
         }
+        const hue = RAIN_HUES[colorIndexRef.current];
         const progress = (col.drop * fontSize) / canvas.height;
-        const brightness = Math.round(255 * Math.max(0, 1 - progress)); // characters dim as they fall
+        const lightness = Math.max(0, 1 - progress) * 50; // characters dim as they fall (0–50% lightness)
         const shimmer = shimmerMin + Math.random() * (shimmerMax - shimmerMin); // random flicker gives the trail texture
         ctx.fillStyle = col.hasBrightHead
-          ? brightHeadColor
-          : `rgb(0, ${Math.round(brightness * shimmer)}, 0)`;
+          ? `hsl(${hue}, 100%, ${brightHeadLightness}%)`
+          : `hsl(${hue}, 100%, ${(lightness * shimmer).toFixed(1)}%)`;
         ctx.fillText(col.char, i * fontSize, Math.floor(col.drop) * fontSize); // snap to grid to avoid sub-pixel smear
         if (
           col.drop * fontSize > canvas.height &&
@@ -176,7 +181,16 @@ export default function Home() {
           }}
         >
           <div className="mb-1">
-            <span>rod {">"}</span> {typed}
+            <span
+              onClick={() => {
+                colorIndexRef.current =
+                  (colorIndexRef.current + 1) % RAIN_HUES.length;
+              }}
+              style={{ cursor: "pointer", userSelect: "none" }}
+            >
+              rod {">"}
+            </span>{" "}
+            {typed}
             <span className={showCursor ? "opacity-100" : "opacity-0"}>█</span>
           </div>
           <div className="mt-6 flex gap-6 text-xs text-green-700">
