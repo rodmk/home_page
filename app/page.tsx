@@ -7,16 +7,15 @@ const CHARS = "アイウエオカキクケコサシスセソタチツテトナ�
 
 // Terminal lines — loop continuously with a hold on the last line before resetting
 const LINES = [
-  "> initializing...",
-  "> loading rodmk.com",
-  "> coming soon",
+  "initializing...",
+  "loading rodmk.com",
+  "coming soon",
 ];
 
 export default function Home() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [typed, setTyped] = useState("");
   const [showCursor, setShowCursor] = useState(true);
-  const [visibleLines, setVisibleLines] = useState<string[]>([]);
 
   // Matrix rain
   useEffect(() => {
@@ -84,32 +83,21 @@ export default function Home() {
         setTyped(current);
         charIndex++;
         setTimeout(type, 70);
-      } else if (lineIndex === LINES.length - 1) {
-        // Hold the last line with cursor visible before resetting
-        setTimeout(() => {
-          if (cancelled) return;
-          setVisibleLines([]);
-          setTyped("");
-          current = "";
-          charIndex = 0;
-          lineIndex = 0;
-          setTimeout(type, 400);
-        }, 3000);
       } else {
-        // Hold cursor at end of line before moving on
+        const isLast = lineIndex === LINES.length - 1;
+        // Hold cursor at end of line, then cycle to next (or reset if last)
         setTimeout(() => {
           if (cancelled) return;
-          setVisibleLines((prev) => [...prev, current]);
           setTyped("");
           current = "";
           charIndex = 0;
-          lineIndex++;
-          setTimeout(type, 300);
-        }, 700);
+          lineIndex = isLast ? 0 : lineIndex + 1;
+          setTimeout(type, 1000);
+        }, isLast ? 3000 : 700);
       }
     };
 
-    setTimeout(type, 800);
+    setTimeout(type, 2000);
     return () => { cancelled = true; };
   }, []);
 
@@ -132,12 +120,7 @@ export default function Home() {
             rodmk.com
           </div>
           <div className="mb-1">
-            {visibleLines.map((line, i) => (
-              <div key={i} className="mb-1 opacity-70">{line}</div>
-            ))}
-            <div className="mb-1">
-              {typed}<span className={typed && showCursor ? "opacity-100" : "opacity-0"}>█</span>
-            </div>
+            <span className="opacity-50">{">"}</span> {typed}<span className={showCursor ? "opacity-100" : "opacity-0"}>█</span>
           </div>
           <div className="mt-6 text-xs text-green-700 hover:text-green-400 transition-colors">
             <a href="https://github.com/rodmk" target="_blank" rel="noopener noreferrer">
