@@ -31,9 +31,10 @@ export default function Home() {
     resize();
     window.addEventListener("resize", resize);
 
-    const fontSize = 14;
+    const fontSize = 16;
     let cols = Math.floor(canvas.width / fontSize);
-    const drops: number[] = Array(cols).fill(1);
+    const rows = Math.floor(canvas.height / fontSize);
+    const drops: number[] = Array.from({ length: cols }, () => Math.floor(Math.random() * rows));
 
     const draw = () => {
       cols = Math.floor(canvas.width / fontSize);
@@ -60,7 +61,10 @@ export default function Home() {
       }
     };
 
-    const interval = setInterval(draw, 50);
+    // Pre-run to simulate ~5s of past animation (100 frames × 50ms)
+    for (let i = 0; i < 100; i++) draw();
+
+    const interval = setInterval(draw, 120);
     return () => {
       clearInterval(interval);
       window.removeEventListener("resize", resize);
