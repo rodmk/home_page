@@ -6,8 +6,7 @@ import { useEffect, useRef, useState } from "react";
 const CHARS =
   "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-// Terminal lines — loop continuously with a hold on the last line before resetting
-const LINES = ["initializing...", "loading rodmk.com", "coming soon"];
+const LINES = ["hello, world 👋 "];
 
 export default function Home() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -106,9 +105,9 @@ export default function Home() {
     const type = () => {
       if (cancelled) return;
 
-      const line = LINES[lineIndex];
-      if (charIndex < line.length) {
-        current += line[charIndex];
+      const chars = Array.from(LINES[lineIndex]);
+      if (charIndex < chars.length) {
+        current += chars[charIndex];
         setTyped(current);
         charIndex++;
         setTimeout(type, 70);
@@ -124,7 +123,7 @@ export default function Home() {
             lineIndex = isLast ? 0 : lineIndex + 1;
             setTimeout(type, 1000);
           },
-          isLast ? 3000 : 700
+          isLast ? 5000 : 700
         );
       }
     };
@@ -158,27 +157,35 @@ export default function Home() {
       <div className="relative z-10 flex items-center justify-center h-full">
         {/* Monaco/Menlo for Mac, Consolas for Windows — no web font dependency. Ligatures off to prevent ... → … substitution. Phosphor glow via text-shadow. */}
         <div
-          className="text-sm sm:text-base text-green-400 p-8 max-w-lg w-full bg-black/70 backdrop-blur-sm rounded"
+          className="text-sm sm:text-base text-green-400 p-8 max-w-sm w-full bg-black/90 backdrop-blur-sm rounded border border-green-500/40"
           style={{
             fontFamily: "Monaco, Menlo, Consolas, 'Courier New', monospace",
             fontVariantLigatures: "none",
-            textShadow: "0 0 4px rgba(0, 255, 65, 0.4)",
+            textShadow: "0 0 8px rgba(0, 255, 65, 0.7)",
+            boxShadow:
+              "0 0 24px rgba(0, 255, 65, 0.15), inset 0 0 24px rgba(0, 255, 65, 0.03)",
           }}
         >
-          <div className="mb-6 text-green-500 opacity-60 text-xs tracking-widest uppercase">
-            rodmk.com
-          </div>
           <div className="mb-1">
-            <span className="opacity-50">{">"}</span> {typed}
+            <span>rod {">"}</span> {typed}
             <span className={showCursor ? "opacity-100" : "opacity-0"}>█</span>
           </div>
-          <div className="mt-6 text-xs text-green-700 hover:text-green-400 transition-colors">
+          <div className="mt-6 flex gap-6 text-xs text-green-700">
             <a
               href="https://github.com/rodmk"
               target="_blank"
               rel="noopener noreferrer"
+              className="hover:text-green-400 transition-colors"
             >
-              ~/github.com/rodmk
+              ~/github
+            </a>
+            <a
+              href="https://linkedin.com/in/rodmk"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-green-400 transition-colors"
+            >
+              ~/linkedin
             </a>
           </div>
         </div>

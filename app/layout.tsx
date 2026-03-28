@@ -13,17 +13,17 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "rodmk.com",
-  description: "Coming soon",
+  title: "rodmk",
+  description: "rodmk.com",
   openGraph: {
-    title: "rodmk.com",
-    description: "Coming soon",
+    title: "rodmk",
+    description: "rodmk.com",
     images: [{ url: "/og-image.png", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "rodmk.com",
-    description: "Coming soon",
+    title: "rodmk",
+    description: "rodmk.com",
     images: ["/og-image.png"],
   },
 };
