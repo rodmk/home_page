@@ -121,7 +121,7 @@ export default function Home() {
 
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-black">
+    <div className="relative w-full overflow-hidden bg-black" style={{ height: "100dvh" }}>
       <canvas ref={canvasRef} className="absolute inset-0" />
       {/* CRT scanline effect */}
       <div className="absolute inset-0 pointer-events-none" style={{ background: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.4) 2px, rgba(0,0,0,0.4) 4px)" }} />
