@@ -8,14 +8,20 @@ const CHARS =
 
 const LINES = ["hello, world 👋 "];
 
-// Rainbow hues cycled by triple-clicking the prompt
+// Rainbow hues cycled by clicking anywhere on the terminal card
 const RAIN_HUES = [120, 200, 270, 0, 30, 60]; // green, blue, purple, red, orange, yellow
 
 export default function Home() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const colorIndexRef = useRef(0);
+  const [hue, setHue] = useState(RAIN_HUES[0]);
   const [typed, setTyped] = useState("");
   const [showCursor, setShowCursor] = useState(true);
+
+  const cycleColor = () => {
+    colorIndexRef.current = (colorIndexRef.current + 1) % RAIN_HUES.length;
+    setHue(RAIN_HUES[colorIndexRef.current]);
+  };
 
   // Matrix rain
   useEffect(() => {
@@ -38,7 +44,7 @@ export default function Home() {
     const shimmerMin = 0.6;
     const shimmerMax = 1.0;
     const dropResetThreshold = 0.975; // higher = fewer simultaneous columns
-    const brightHeadChance = 0.2;
+    const brightHeadChance = 0.05;
     const brightHeadLightness = 85; // lightness % for bright head characters
 
     type Column = {
@@ -168,49 +174,73 @@ export default function Home() {
             "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.4) 2px, rgba(0,0,0,0.4) 4px)",
         }}
       />
-      <div className="relative z-10 flex items-center justify-center h-full">
+      <div className="relative z-10 flex flex-col items-center justify-center h-full gap-4">
         {/* Monaco/Menlo for Mac, Consolas for Windows — no web font dependency. Ligatures off to prevent ... → … substitution. Phosphor glow via text-shadow. */}
         <div
-          className="text-sm sm:text-base text-green-400 p-8 max-w-sm w-full bg-black/90 backdrop-blur-sm rounded border border-green-500/40"
+          onClick={cycleColor}
+          className="text-sm sm:text-base p-8 max-w-sm w-full bg-black/90 backdrop-blur-sm rounded transition-colors duration-300"
           style={{
             fontFamily: "Monaco, Menlo, Consolas, 'Courier New', monospace",
             fontVariantLigatures: "none",
-            textShadow: "0 0 8px rgba(0, 255, 65, 0.7)",
-            boxShadow:
-              "0 0 24px rgba(0, 255, 65, 0.15), inset 0 0 24px rgba(0, 255, 65, 0.03)",
+            color: `hsl(${hue}, 100%, 65%)`,
+            borderWidth: 1,
+            borderStyle: "solid",
+            borderColor: `hsla(${hue}, 100%, 50%, 0.4)`,
+            textShadow: `0 0 8px hsla(${hue}, 100%, 50%, 0.7)`,
+            boxShadow: `0 0 24px hsla(${hue}, 100%, 50%, 0.15), inset 0 0 24px hsla(${hue}, 100%, 50%, 0.03)`,
+            cursor: "pointer",
+            userSelect: "none",
           }}
         >
-          <div className="mb-1">
-            <span
-              onClick={() => {
-                colorIndexRef.current =
-                  (colorIndexRef.current + 1) % RAIN_HUES.length;
-              }}
-              style={{ cursor: "pointer", userSelect: "none" }}
-            >
-              rod {">"}
-            </span>{" "}
-            {typed}
+          <div>
+            rod {">"} {typed}
             <span className={showCursor ? "opacity-100" : "opacity-0"}>█</span>
           </div>
-          <div className="mt-6 flex gap-6 text-xs text-green-700">
-            <a
-              href="https://github.com/rodmk"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-green-400 transition-colors"
-            >
-              ~/github
-            </a>
-            <a
-              href="https://linkedin.com/in/rodmk"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-green-400 transition-colors"
-            >
-              ~/linkedin
-            </a>
-          </div>
+        </div>
+        <div
+          className="flex gap-4"
+          style={{ color: `hsl(${hue}, 100%, 35%)` }}
+        >
+          <a
+            href="https://github.com/rodmk"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transition-colors duration-300 p-2"
+            onMouseEnter={(e) => (e.currentTarget.style.color = `hsl(${hue}, 100%, 65%)`)}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "")}
+            aria-label="GitHub"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+            </svg>
+          </a>
+          <a
+            href="https://linkedin.com/in/rodmk"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transition-colors duration-300 p-2"
+            onMouseEnter={(e) => (e.currentTarget.style.color = `hsl(${hue}, 100%, 65%)`)}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "")}
+            aria-label="LinkedIn"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+            </svg>
+          </a>
+          <button
+            onClick={() => {
+              window.location.href = `mailto:rod@${window.location.hostname}`;
+            }}
+            className="transition-colors duration-300 p-2"
+            onMouseEnter={(e) => (e.currentTarget.style.color = `hsl(${hue}, 100%, 65%)`)}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "")}
+            aria-label="Email"
+            style={{ background: "none", border: "none", color: "inherit", cursor: "pointer" }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/>
+            </svg>
+          </button>
         </div>
       </div>
     </div>
