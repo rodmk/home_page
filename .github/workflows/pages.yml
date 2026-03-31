@@ -19,6 +19,8 @@ jobs:
           node-version: 24
       - run: npm ci
       - run: npm run build
+        env:
+          PAGES_BASE_PATH: /home_page
       - uses: actions/upload-pages-artifact@v4
         with:
           path: out
